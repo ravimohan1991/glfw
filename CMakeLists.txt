@@ -5,7 +5,7 @@
                                             - Lul, Practicality
  ]]
 
-cmake_minimum_required(VERSION 3.1...3.17 FATAL_ERROR)
+#cmake_minimum_required(VERSION 3.1...3.17 FATAL_ERROR)
 
 project(GLFW VERSION 3.4.0 LANGUAGES C)
 
