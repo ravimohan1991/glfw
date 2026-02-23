@@ -253,8 +253,6 @@ static void destroyContextGLX(_GLFWwindow* window)
 //////                       GLFW internal API                      //////
 //////////////////////////////////////////////////////////////////////////
 
-// Initialize GLX
-//
 GLFWbool _glfwInitGLX(void)
 {
     const char* sonames[] =
@@ -426,18 +424,13 @@ GLFWbool _glfwInitGLX(void)
     return GLFW_TRUE;
 }
 
-// Terminate GLX
-//
 void _glfwTerminateGLX(void)
 {
     // NOTE: This function must not call any X11 functions, as it is called
     //       after XCloseDisplay (see _glfwTerminateX11 for details)
 
-    if (_glfw.glx.handle)
-    {
-        _glfwPlatformFreeModule(_glfw.glx.handle);
-        _glfw.glx.handle = NULL;
-    }
+    _glfwPlatformFreeModule(_glfw.glx.handle);
+    _glfw.glx.handle = NULL;
 }
 
 #define SET_ATTRIB(a, v) \
@@ -447,8 +440,6 @@ void _glfwTerminateGLX(void)
     attribs[index++] = v; \
 }
 
-// Create the OpenGL or OpenGL ES context
-//
 GLFWbool _glfwCreateContextGLX(_GLFWwindow* window,
                                const _GLFWctxconfig* ctxconfig,
                                const _GLFWfbconfig* fbconfig)
@@ -626,6 +617,8 @@ GLFWbool _glfwCreateContextGLX(_GLFWwindow* window,
         return GLFW_FALSE;
     }
 
+    window->context.glx.fbconfig = native;
+
     window->context.makeCurrent = makeContextCurrentGLX;
     window->context.swapBuffers = swapBuffersGLX;
     window->context.swapInterval = swapIntervalGLX;
@@ -717,6 +710,30 @@ GLFWAPI GLXWindow glfwGetGLXWindow(GLFWwindow* handle)
     }
 
     return window->context.glx.window;
+}
+
+GLFWAPI int glfwGetGLXFBConfig(GLFWwindow* handle, GLXFBConfig* config)
+{
+    _GLFW_REQUIRE_INIT_OR_RETURN(GLFW_FALSE);
+
+    if (_glfw.platform.platformID != GLFW_PLATFORM_X11)
+    {
+        _glfwInputError(GLFW_PLATFORM_UNAVAILABLE, "GLX: Platform not initialized");
+        return GLFW_FALSE;
+    }
+
+    _GLFWwindow* window = (_GLFWwindow*) handle;
+    assert(window != NULL);
+    assert(config != NULL);
+
+    if (window->context.source != GLFW_NATIVE_CONTEXT_API)
+    {
+        _glfwInputError(GLFW_NO_WINDOW_CONTEXT, NULL);
+        return GLFW_FALSE;
+    }
+
+    *config = window->context.glx.fbconfig;
+    return GLFW_TRUE;
 }
 
 #endif // _GLFW_X11
